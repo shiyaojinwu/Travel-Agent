@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: ai-agent  # 应用名称，可用于服务注册、日志、配置等标识
+  ai:
+    dashscope:
+      api-key: sk-a113c10098a44ffc95abf1361bbabfc0
+      chat:
+        options:
+          model: qwen-plus
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        dimensions: 1536
+        distance-type: COSINE_DISTANCE
+        max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+        initialize-schema: true
+        table-name: vector_store
+    mcp:
+      client:
+        sse:
+          connections:
+            server1:
+              url: http://localhost:9526
+#        stdio:
+#         servers-configuration: classpath:mcp-servers.json
+  datasource:
+    url: jdbc:postgresql://rm-cn-fsw4c5w5k000brlo.rwlb.rds.aliyuncs.com/ai-agent
+    username: shiyao
+    password: Zhangzyh5668
+server:
+  port: 9527  # 应用启动端口，访问地址如 http://localhost:9527
+  servlet:
+    context-path: /api  # 统一的接口前缀路径，比如 Controller 路径将变成 /api/xxx
+
+# ✅ SpringDoc OpenAPI 配置（用于生成 Swagger 文档）
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html         # Swagger UI 页面访问路径，默认是 /swagger-ui/index.html，改为更常用的 /swagger-ui.html（方便 Knife4j）
+    tags-sorter: alpha             # 按字母顺序对 Tags 分组排序（alpha 表示 alphabetical）
+    operations-sorter: alpha       # 按字母顺序对接口方法排序
+
+  api-docs:
+    path: /v3/api-docs             # OpenAPI 的原始 JSON 文档访问路径（用于 Swagger UI 渲染）
+
+  group-configs: # 分组配置（支持多个分组文档）
+    - group: 'default'             # 分组名，可在 Swagger 页面顶部切换
+      paths-to-match: '/**'        # 需要扫描的路径范围，/** 表示全部接口
+      packages-to-scan: com.sz.aiagent.controller  # 需要扫描的 Controller 包路径（务必保证包名正确）
+
+# ✅ Knife4j 配置（Swagger 增强 UI）
+knife4j:
+  enable: true                     # 启用 Knife4j 增强功能（美化 UI、增强交互）
+  setting:
+    language: zh_cn               # 设置 UI 语言为中文（zh_cn）
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: debug
+# searchAPI
+search-api:
+  api-key: XAgpKDq9JQTf8DgC2Rnqojew
