@@ -2,8 +2,12 @@
   <div class="chat-container">
     <h1>AI 旅游大师</h1>
     <div class="chat-history">
-      <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.sender]">
-        {{ msg.content }}
+      <div v-for="(msg, index) in messages" :key="index" :class="['message-wrapper', msg.sender]">
+        <img v-if="msg.sender === 'user'" src="/public/back.png" alt="用户头像" class="avatar user-avatar">
+        <img v-if="msg.sender === 'ai'" src="/src/assets/vue.svg" alt="AI 头像" class="avatar ai-avatar">
+        <div class="message">
+          {{ msg.content }}
+        </div>
       </div>
     </div>
     <div class="input-area">
@@ -74,22 +78,13 @@ export default {
 
 <style scoped>
 .chat-container {
-  width: min(80vw, 80vh);
-  height: min(80vw, 80vh);
+  width: 100%;
+  height: 100%;
   padding: 20px;
-  background: url('/back.png') center/cover no-repeat;
   box-sizing: border-box;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-@media (min-width: 100vh), (min-height: 100vw) {
-  .chat-container {
-    width: 50vw;
-    height: 50vw;
-  }
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-history {
@@ -98,27 +93,45 @@ export default {
   border-radius: 4px;
   padding: 10px;
   margin-bottom: 10px;
-  min-height: 400px;
-  max-height: 600px;
+  flex-grow: 1;
   overflow-y: auto;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.message-wrapper {
+  display: flex;
+  align-items: flex-start;
+  margin: 10px;
+}
+
+.message-wrapper.user {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 10px;
+  align-self: flex-start;
 }
 
 .message {
-  margin: 10px;
   padding: 10px;
   border-radius: 4px;
-  width: 100%;
+  max-width: 60%;
 }
-
 .message.user {
-  background-color: #dcf8c6;
-  margin-left: auto;
+  background-color: #73a6ff;
+  text-align: right;
 }
-
+.message.user {
+  background-color: #73a6ff;
+  text-align: right;
+}
 .message.ai {
-  background-color: #ece5dd;
-  margin-right: auto;
+  background-color: #ff9999;
+  text-align: left;
 }
 
 .input-area {

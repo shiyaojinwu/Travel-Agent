@@ -86,6 +86,9 @@ public class TravelApp {
                 .user(message)
                 .advisors(spec -> spec.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                // RAG
+                .advisors(travelAppRagCustomAdvisorFactory
+                        .createLoveAppRagCustomAdvisor(pgVectorVectorStore))
                 .stream()
                 .content();
     }

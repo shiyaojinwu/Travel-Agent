@@ -2,7 +2,9 @@
 </script>
 
 <template>
-  <router-view />
+  <div class="app-container">
+    <router-view />
+  </div>
 </template>
 
 <style>
@@ -14,5 +16,44 @@
 
 body {
   font-family: Avenir, Helvetica, Arial, sans-serif;
+  background-image: url('/back.png');
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/back.png');
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px);
+  opacity: 0.6;
+  z-index: -1;
+}
+
+.app-container {
+  position: relative;
+  width: min(80vw, 80vh);
+  height: min(80vw, 80vh);
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1;
+  overflow: hidden;
+}
+
+.app-container router-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 </style>

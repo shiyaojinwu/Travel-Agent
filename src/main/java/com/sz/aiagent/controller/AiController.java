@@ -58,7 +58,7 @@ public class AiController {
      * @author zyh
      * @date 2025/07/13
      */
-    @GetMapping("/love_app/chat/sync")
+    @GetMapping("/chat/sync")
     public String doChatWithLoveAppSync(String message, String chatId) {
         return travelApp.doChat(message, chatId);
     }
@@ -72,7 +72,7 @@ public class AiController {
      * @author zyh
      * @date 2025/07/13
      */
-    @GetMapping(value = "/love_app/chat/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/chat/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> doChatWithLoveAppSSE(String message, String chatId) {
         return travelApp.doChatByStream(message, chatId);
     }
@@ -86,7 +86,7 @@ public class AiController {
      * @author zyh
      * @date 2025/07/13
      */
-    @GetMapping(value = "/love_app/chat/server_sent_event")
+    @GetMapping(value = "/chat/server_sent_event")
     public Flux<ServerSentEvent<String>> doChatWithLoveAppServerSentEvent(String message, String chatId) {
         return travelApp.doChatByStream(message, chatId)
                 .map(chunk -> ServerSentEvent.<String>builder()
@@ -103,7 +103,7 @@ public class AiController {
      * @author zyh
      * @date 2025/07/13
      */
-    @GetMapping(value = "/love_app/chat/sse_emitter")
+    @GetMapping(value = "/chat/sse_emitter")
     public SseEmitter doChatWithLoveAppServerSseEmitter(String message, String chatId) {
         // 创建超时为 3 分钟的 SseEmitter 实例
         SseEmitter sseEmitter = new SseEmitter(180000L);

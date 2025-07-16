@@ -17,20 +17,16 @@ export default {
 
 <style scoped>
 .home {
-  width: 80vw;
-  height: 80vh;
+  width: 100%;
+  height: 100%;
   text-align: center;
   padding: 20px;
-  background: url('/back.png') center/cover no-repeat;
+  background: rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
 .app-links {
