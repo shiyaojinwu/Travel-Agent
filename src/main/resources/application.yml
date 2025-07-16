@@ -17,12 +17,12 @@ spring:
         table-name: vector_store
     mcp:
       client:
-        sse:
-          connections:
-            server1:
-              url: http://localhost:9526
-#        stdio:
-#         servers-configuration: classpath:mcp-servers.json
+#        sse:
+#          connections:
+#            server1:
+#              url: http://localhost:9526
+        stdio:
+         servers-configuration: classpath:mcp-servers.json
   datasource:
     url: jdbc:postgresql://rm-cn-fsw4c5w5k000brlo.rwlb.rds.aliyuncs.com/ai-agent
     username: shiyao

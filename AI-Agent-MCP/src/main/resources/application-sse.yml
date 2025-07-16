@@ -5,5 +5,7 @@ spring:
         name: image-search-mcp-server
         version: 0.0.1
         type: SYNC
-        # sse
         stdio: false
+        sse:
+          timeout: 30000        # SSE 超时时间，单位毫秒，默认可能是 20s
+          heartbeat-interval: 25000  # SSE 心跳间隔，避免连接断开

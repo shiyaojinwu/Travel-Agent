@@ -42,7 +42,7 @@ public class ImageSearchTool {
      * @author zyh
      * @date 2025/07/15
      */
-    @Tool(description = "search image from web2")
+    @Tool(description = "search image from web")
     public String searchImage(@ToolParam(description = "Search query keyword") String query) {
         try {
             // 调用搜索中等尺寸图片的方法，并用逗号连接成字符串返回

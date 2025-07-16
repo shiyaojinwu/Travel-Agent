@@ -32,8 +32,9 @@ import java.util.stream.Collectors;
 @Data
 @Slf4j
 public class ToolCallAgent extends ReActAgent {
-    @Resource
+
     private ToolCallbackProvider toolCallbackProvider;
+
     /**
      * 可用的工具集，ToolCallback 是工具的回调接口
      */
@@ -60,9 +61,10 @@ public class ToolCallAgent extends ReActAgent {
      * @author zyh
      * @date 2025/07/15
      */
-    public ToolCallAgent(ToolCallback[] availableTools) {
+    public ToolCallAgent(ToolCallback[] availableTools, ToolCallbackProvider toolCallbackProvider) {
         super();
         this.availableTools = availableTools;
+        this.toolCallbackProvider = toolCallbackProvider;
         this.toolCallingManager = ToolCallingManager.builder().build();
         // 禁用 Spring AI 内置的工具调用机制，自己维护选项和消息上下文
         this.chatOptions = DashScopeChatOptions.builder()
@@ -79,10 +81,10 @@ public class ToolCallAgent extends ReActAgent {
     @Override
     public boolean think() {
         // 1、下一步提示词，拼接下一步提示词，每次思考都会拼接一次，不断引导
-        if (StrUtil.isNotBlank(getNextStepPrompt())) {
-            UserMessage userMessage = new UserMessage(getNextStepPrompt());
-            getMessageList().add(userMessage);
-        }
+//        if (StrUtil.isNotBlank(getNextStepPrompt())) {
+//            UserMessage userMessage = new UserMessage(getNextStepPrompt());
+//            getMessageList().add(userMessage);
+//        }
         // 2、调用 AI 大模型，获取工具调用结果
         List<Message> messageList = getMessageList();
         Prompt prompt = new Prompt(messageList, this.chatOptions);

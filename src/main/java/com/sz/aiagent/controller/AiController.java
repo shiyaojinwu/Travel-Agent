@@ -5,6 +5,7 @@ import com.sz.aiagent.app.TravelApp;
 import jakarta.annotation.Resource;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +36,12 @@ public class AiController {
      */
     @Resource
     private ToolCallback[] allTools;
+
+    /**
+     * MCP工具
+     */
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
 
     /**
      * 注入 DashScope ChatModel，用于与 AI 交互
@@ -125,7 +132,7 @@ public class AiController {
     @GetMapping("/manus/chat")
     public SseEmitter doChatWithManus(String message) {
         // 新建 Manus 智能体实例（无状态）
-        Manus Manus = new Manus(allTools, dashscopeChatModel);
+        Manus Manus = new Manus(allTools, dashscopeChatModel, toolCallbackProvider);
         // 运行并返回流式响应的 SseEmitter
         return Manus.runStream(message);
     }

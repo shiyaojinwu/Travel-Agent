@@ -4,6 +4,7 @@ import com.sz.aiagent.advisor.LoggerAdvisor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.stereotype.Component;
 
 /**
@@ -23,23 +24,29 @@ public class Manus extends ToolCallAgent {
      * @author zyh
      * @date 2025/07/15
      */
-    public Manus(ToolCallback[] allTools, ChatModel dashscopeChatModel) {
+    public Manus(ToolCallback[] allTools, ChatModel dashscopeChatModel, ToolCallbackProvider toolCallbackProvider) {
         // 注册工具
-        super(allTools);
+        super(allTools,toolCallbackProvider);
         // 设置智能体名称
         this.setName("Manus");
         // 🧭 系统提示词：定义智能体的角色与能力
         String SYSTEM_PROMPT = """
                 You are Manus, an all-capable AI assistant, aimed at solving any task presented by the user.
                 You have various tools at your disposal that you can call upon to efficiently complete complex requests.
+                Proactively select the most appropriate tool or combination of tools according to the user's needs.
+                For simple tasks, you'll need to answer the user in a response and then use the 'terminate' tool/function call to stop the action in a timely manner.
+                For complex tasks, you can break down the problem and use different tools to solve it step by step.
+                After using each tool, clearly explain the results of the execution and suggest next steps.
+                If you want to stop the interaction at any point, use the 'terminate' tool/function call.
                 """;
         this.setSystemPrompt(SYSTEM_PROMPT);
         // 🔁 下一步提示词：指引智能体如何逐步解决问题、规划任务流程
         String NEXT_STEP_PROMPT = """
-                Based on user needs, proactively select the most appropriate tool or combination of tools.
-                For complex tasks, you can break down the problem and use different tools step by step to solve it.
-                After using each tool, clearly explain the execution results and suggest the next steps.
-                If you want to stop the interaction at any point, use the `terminate` tool/function call.
+                Proactively select the most appropriate tool or combination of tools according to the user's needs.
+                For simple tasks, you'll need to answer the user in a response and then use the 'terminate' tool/function call to stop the action in a timely manner.
+                For complex tasks, you can break down the problem and use different tools to solve it step by step.
+                After using each tool, clearly explain the results of the execution and suggest next steps.
+                If you want to stop the interaction at any point, use the 'terminate' tool/function call.
                 """;
         this.setNextStepPrompt(NEXT_STEP_PROMPT);
         // 设置最多执行的步骤次数，避免无限循环
