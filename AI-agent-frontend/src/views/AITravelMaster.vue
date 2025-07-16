@@ -27,7 +27,8 @@ export default {
     return {
       inputMessage: '',
       messages: [],
-      currentAiResponseIndex: -1
+      currentAiResponseIndex: -1,
+      chatId: 'chat-' + Date.now() // 初始化时生成一次 chatId
     }
   },
   methods: {
@@ -46,8 +47,7 @@ export default {
         content: ''
       });
       
-      const url = 'http://localhost:9527/api/ai/love_app/chat/sse_emitter';
-      const eventSource = new EventSource(`${url}?message=${encodeURIComponent(this.inputMessage)}&chatId=${this.generateChatId()}`);
+      const eventSource = new EventSource(`http://8.138.124.114:9527/api/ai/chat/sse_emitter?message=${encodeURIComponent(this.inputMessage)}&chatId=${this.chatId}`);
       
       eventSource.onmessage = (event) => {
         if (event.data) {
@@ -61,10 +61,10 @@ export default {
       
       this.inputMessage = '';
     },
-    // 生成聊天室 ID
-    generateChatId() {
-      return 'chat-' + Date.now();
-    }
+    // 移除生成聊天室 ID 的方法
+    // generateChatId() {
+    //   return 'chat-' + Date.now();
+    // }
   },
   mounted() {
     // 页面加载时显示欢迎消息

@@ -44,7 +44,7 @@ export default {
         this.eventSource.close();
       }
       
-      this.eventSource = new EventSource(`http://localhost:9527/api/ai/manus/chat?message=${encodeURIComponent(this.inputMessage)}`);
+      this.eventSource = new EventSource(`http://8.138.124.114:9527/api/ai/manus/chat?message=${encodeURIComponent(this.inputMessage)}`);
       
       this.eventSource.onmessage = (event) => {
         if (event.data) {
