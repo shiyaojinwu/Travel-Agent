@@ -42,7 +42,7 @@ public class TravelAppRagCustomAdvisorFactory {
         DocumentRetriever documentRetriever = VectorStoreDocumentRetriever.builder()
                 .vectorStore(vectorStore)             // 绑定向量存储
                 //.filterExpression(expression)         // 过滤状态
-                .similarityThreshold(0.8)              // 相似度阈值（0~1，越大越严格）
+                .similarityThreshold(0.5)              // 相似度阈值（0~1，越大越严格）
                 .topK(3)                              // 返回最相关的前3条文档
                 .build();
 
