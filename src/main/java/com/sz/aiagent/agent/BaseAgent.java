@@ -160,7 +160,7 @@ public abstract class BaseAgent {
                     log.info("执行步骤 {}/{}", stepNumber, maxSteps);
                     // 单步执行
                     String stepResult = step();
-                    String result = "步骤 " + stepNumber + ": " + stepResult;
+                    String result = "正在执行步骤 " + stepNumber + ":\n " + stepResult;
                     results.add(result);
                     // 将当前结果通过 SSE 发送到前端
                     sseEmitter.send(result);

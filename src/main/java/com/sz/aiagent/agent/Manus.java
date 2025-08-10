@@ -50,7 +50,7 @@ public class Manus extends ToolCallAgent {
                 """;
         this.setNextStepPrompt(NEXT_STEP_PROMPT);
         // 设置最多执行的步骤次数，避免无限循环
-        this.setMaxSteps(20);
+        this.setMaxSteps(10);
         // ⚙️ 初始化 ChatClient 客户端，绑定模型与默认 Advisor（如日志记录）
         ChatClient chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultAdvisors(new LoggerAdvisor())

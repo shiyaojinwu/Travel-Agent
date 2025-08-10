@@ -34,7 +34,7 @@ public class TerminalOperationTool {
         StringBuilder output = new StringBuilder();
         try {
             // 使用 ProcessBuilder 构造 Windows 命令执行器（cmd /c <command>）
-            ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", command);
+            ProcessBuilder builder = new ProcessBuilder("/bin/bash", "-c", command);
             // 启动进程
             Process process = builder.start();
             // 读取命令执行过程中的标准输出流
