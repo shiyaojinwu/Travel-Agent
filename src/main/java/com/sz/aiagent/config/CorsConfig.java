@@ -1,32 +1,23 @@
 package com.sz.aiagent.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * 全局跨域配置
- * @author zyh
- * @version 1.0.0
- * @date 2025/07/13
- */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
+  @Value("${travel.cors-origins:http://localhost:5173,http://127.0.0.1:5173}")
+  private String[] origins;
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry
-                // 设置允许跨域的路径
-                .addMapping("/**")
-                // 设置允许跨域请求的域名
-                .allowedOriginPatterns("*")
-                // 是否允许证书
-                .allowCredentials(true)
-                // 设置允许的方法
-                .allowedMethods("GET", "POST", "DELETE", "PUT", "OPTIONS")
-                // 设置允许的header属性
-                .allowedHeaders("*")
-                // 跨域允许时间
-                .maxAge(3600);
-    }
+  @Override
+  public void addCorsMappings(CorsRegistry registry) {
+    registry
+        .addMapping("/**")
+        .allowedOrigins(origins)
+        .allowCredentials(true)
+        .allowedMethods("GET", "POST", "DELETE", "OPTIONS")
+        .allowedHeaders("Content-Type")
+        .maxAge(3600);
+  }
 }

@@ -40,8 +40,9 @@ body::before {
 
 .app-container {
   position: relative;
-  width: min(80vw, 80vh);
-  height: min(80vw, 80vh);
+  width: min(900px, calc(100vw - 32px));
+  height: min(760px, calc(100dvh - 48px));
+  min-height: 320px;
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;

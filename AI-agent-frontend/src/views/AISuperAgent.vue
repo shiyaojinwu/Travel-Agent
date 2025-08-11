@@ -2,75 +2,27 @@
   <div class="chat-container">
     <h1>AI 超级智能体</h1>
     <div class="chat-history">
-      <div v-for="(msg, index) in messages" :key="index" :class="['message-wrapper', msg.sender]">
-        <img v-if="msg.sender === 'user'" src="/public/back.png" alt="用户头像" class="avatar user-avatar">
+      <div v-for="msg in messages" :key="msg.id" :class="['message-wrapper', msg.sender]">
+        <img v-if="msg.sender === 'user'" src="/back.png" alt="用户头像" class="avatar user-avatar">
         <img v-if="msg.sender === 'ai'" src="/src/assets/vue.svg" alt="AI 头像" class="avatar ai-avatar">
         <div class="message">
-          {{ msg.content }}
+          <details v-if="msg.steps?.length"><summary>查看执行过程（{{ msg.steps.length }} 步）</summary><p v-for="(step, i) in msg.steps" :key="i">{{ step }}</p></details>
+          {{ msg.content || (generating && msg.sender === 'ai' ? '正在生成…' : '') }}
         </div>
       </div>
     </div>
+    <p v-if="notice" class="stream-notice" role="status">{{ notice }}</p>
     <div class="input-area">
-      <input v-model="inputMessage" @keyup.enter="sendMessage" placeholder="请输入消息...">
-      <button @click="sendMessage">发送</button>
+      <input v-model="inputMessage" @keyup.enter="sendMessage" placeholder="请输入消息..." aria-label="消息内容" maxlength="8000" :disabled="generating">
+      <button v-if="generating" @click="stopGeneration">停止生成</button>
+      <button v-else @click="sendMessage" :disabled="!inputMessage.trim()">发送</button>
     </div>
   </div>
 </template>
 
 <script>
-
-// AI 超级智能体页面组件
-export default {
-  name: 'AISuperAgent',
-  data() {
-    return {
-      inputMessage: '',
-      messages: [],
-      currentAiResponseIndex: -1,
-      eventSource: null
-    }
-  },
-  methods: {
-    // 发送消息
-    sendMessage() {
-      if (!this.inputMessage.trim()) return;
-      
-      this.messages.push({sender: 'user', content: this.inputMessage});
-      this.currentAiResponseIndex = this.messages.length;
-      this.messages.push({sender: 'ai', content: ''});
-      
-      // 关闭之前的 EventSource
-      if (this.eventSource) {
-        this.eventSource.close();
-      }
-      
-      this.eventSource = new EventSource(`http://8.138.124.114:9527/api/ai/manus/chat?message=${encodeURIComponent(this.inputMessage)}`);
-      
-      this.eventSource.onmessage = (event) => {
-        if (event.data) {
-          this.messages[this.currentAiResponseIndex].content += event.data;
-        }
-      };
-      
-      this.eventSource.onerror = (error) => {
-        console.error('Error receiving SSE data:', error);
-        this.eventSource.close();
-      };
-      
-      this.inputMessage = '';
-    }
-  },
-  mounted() {
-    // 页面加载时显示欢迎消息
-    this.messages.push({sender: 'ai', content: '欢迎使用 AI 超级智能体，请问您有什么问题？'});
-  },
-  beforeDestroy() {
-    // 组件销毁前关闭 EventSource
-    if (this.eventSource) {
-      this.eventSource.close();
-    }
-  }
-};
+import { chatView } from '../lib/chatView.js';
+export default chatView('AISuperAgent', 'manus/chat', '欢迎使用旅游智能体。我可以按需查询信息，协助你规划旅行。');
 </script>
 
 <style scoped>
@@ -119,12 +71,12 @@ export default {
   max-width: 60%;
 }
 
-.message.user {
+.message-wrapper.user .message {
   background-color: #73a6ff;
   text-align: left;
 }
 
-.message.ai {
+.message-wrapper.ai .message {
   background-color: #ff9999;
   text-align: left;
 }
@@ -154,4 +106,16 @@ export default {
 .input-area button:hover {
   background-color: #33a06f;
 }
+</style>
+<style scoped>
+.stream-notice { color: #b45309; margin: 0.5rem 0; }
+.chat-container { color: #183348; max-width: min(900px, calc(100vw - 48px)); }
+.chat-container h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); }
+.message { color: #183348; white-space: pre-wrap; overflow-wrap: anywhere; text-align: left; max-width: 80%; }
+.input-area input { min-width: 0; color: #183348; background: white; color-scheme: light; }
+.message-wrapper.ai .message { background: #edf7f3; }
+.message-wrapper.user .message { background: #dbeafe; }
+@media (max-width: 600px) { .avatar { width: 28px; height: 28px; margin: 0 5px; } .message { max-width: 85%; } }
+details { font-size: 0.85rem; opacity: 0.8; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

@@ -5,15 +5,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+@org.junit.jupiter.api.Tag("integration")
 @SpringBootTest
 class AiAgentMcpApplicationTests {
-    @Resource
-    private ImageSearchTool imageSearchTool;
+  @Resource private ImageSearchTool imageSearchTool;
 
-    @Test
-    void searchImage() {
-        String result = imageSearchTool.searchImage("computer");
-        System.out.println(result);
-        Assertions.assertNotNull(result);
-    }
+  @Test
+  void searchImage() {
+    String result = imageSearchTool.searchImage("computer");
+    System.out.println(result);
+    Assertions.assertNotNull(result);
+  }
 }

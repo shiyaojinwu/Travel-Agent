@@ -1,60 +1,48 @@
 spring:
   application:
-    name: ai-agent  # 应用名称，可用于服务注册、日志、配置等标识
+    name: travel-agent
   ai:
     dashscope:
-      api-key: sk-a113c10098a44ffc95abf1361bbabfc0
+      api-key: ${DASHSCOPE_API_KEY:}
       chat:
         options:
-          model: qwen-plus
-    vectorstore:
-      pgvector:
-        index-type: HNSW
-        dimensions: 1536
-        distance-type: COSINE_DISTANCE
-        max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
-        initialize-schema: true
-        table-name: vector_store
+          model: ${CHAT_MODEL:qwen-plus}
+      embedding:
+        options:
+          model: ${EMBEDDING_MODEL:text-embedding-v2}
     mcp:
       client:
-#        sse:
-#          connections:
-#            server1:
-#              url: http://localhost:9526
+        enabled: ${MCP_ENABLED:false}
         stdio:
-         servers-configuration: classpath:mcp-servers.json
+          servers-configuration: ${MCP_SERVERS_CONFIG:classpath:mcp-servers.json}
   datasource:
-    url: jdbc:postgresql://rm-cn-fsw4c5w5k000brlo.rwlb.rds.aliyuncs.com/ai-agent
-    username: shiyao
-    password: Zhangzyh5668
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/travel_agent}
+    username: ${DB_USERNAME:travel}
+    password: ${DB_PASSWORD:}
+    hikari:
+      connection-timeout: 10000
 server:
-  port: 9527  # 应用启动端口，访问地址如 http://localhost:9527
+  address: ${SERVER_ADDRESS:127.0.0.1}
+  port: ${SERVER_PORT:9527}
   servlet:
-    context-path: /api  # 统一的接口前缀路径，比如 Controller 路径将变成 /api/xxx
-
-# ✅ SpringDoc OpenAPI 配置（用于生成 Swagger 文档）
+    context-path: /api
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html         # Swagger UI 页面访问路径，默认是 /swagger-ui/index.html，改为更常用的 /swagger-ui.html（方便 Knife4j）
-    tags-sorter: alpha             # 按字母顺序对 Tags 分组排序（alpha 表示 alphabetical）
-    operations-sorter: alpha       # 按字母顺序对接口方法排序
-
-  api-docs:
-    path: /v3/api-docs             # OpenAPI 的原始 JSON 文档访问路径（用于 Swagger UI 渲染）
-
-  group-configs: # 分组配置（支持多个分组文档）
-    - group: 'default'             # 分组名，可在 Swagger 页面顶部切换
-      paths-to-match: '/**'        # 需要扫描的路径范围，/** 表示全部接口
-      packages-to-scan: com.sz.aiagent.controller  # 需要扫描的 Controller 包路径（务必保证包名正确）
-
-# ✅ Knife4j 配置（Swagger 增强 UI）
+    path: /swagger-ui.html
 knife4j:
-  enable: true                     # 启用 Knife4j 增强功能（美化 UI、增强交互）
-  setting:
-    language: zh_cn               # 设置 UI 语言为中文（zh_cn）
-logging:
-  level:
-    org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor: debug
-# searchAPI
+  enable: true
 search-api:
-  api-key: XAgpKDq9JQTf8DgC2Rnqojew
+  api-key: ${SEARCH_API_KEY:}
+travel:
+  cors-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  rag:
+    version: ${KNOWLEDGE_VERSION:v1}
+    import-on-startup: ${KNOWLEDGE_IMPORT:false}
+    top-k: ${RAG_TOP_K:3}
+    similarity-threshold: ${RAG_SIMILARITY_THRESHOLD:0.5}
+    query-rewrite: ${RAG_QUERY_REWRITE:true}
+    dimensions: ${EMBEDDING_DIMENSIONS:1536}

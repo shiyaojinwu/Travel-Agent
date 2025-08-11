@@ -1,23 +1,27 @@
 package com.sz.aiagent.agent;
 
-import jakarta.annotation.Resource;
-import org.junit.jupiter.api.Assertions;
+import static org.assertj.core.api.Assertions.*;
+
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+@Tag("integration")
 @SpringBootTest
 class ManusTest {
+  @Autowired ChatModel model;
+  @Autowired ToolCallback[] tools;
+  @Autowired ObjectProvider<ToolCallbackProvider> mcp;
 
-    @Resource
-    private Manus manus;
-
-    @Test
-    public void run() {
-        String userPrompt = """
-                我的另一半居住在上海静安区，请帮我找到 5 公里内合适的约会地点，
-                并结合一些网络图片，制定一份详细的约会计划，
-                并以 PDF 格式输出""";
-        String answer = manus.run(userPrompt);
-        Assertions.assertNotNull(answer);
-    }
+  @Test
+  void directTravelQuestion() {
+    var agent = new Manus(tools, model, mcp.getIfAvailable());
+    assertThat(agent.run("请告诉我旅行前需要准备的三件物品，无需查询外部资料。")).isNotBlank();
+    assertThat(agent.getState()).isEqualTo(com.sz.aiagent.agent.model.AgentState.FINISHED);
+  }
 }

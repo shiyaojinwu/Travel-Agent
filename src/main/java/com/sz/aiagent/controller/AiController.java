@@ -2,138 +2,147 @@ package com.sz.aiagent.controller;
 
 import com.sz.aiagent.agent.Manus;
 import com.sz.aiagent.app.TravelApp;
-import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpSession;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 
-import java.io.IOException;
-
-/**
- * AI 服务控制器
- * 提供多种方式调用 AI 应用和 Manus 超级智能体的接口，
- * 支持同步调用、SSE 流式推送、以及基于 SseEmitter 的推送。
- */
 @RestController
 @RequestMapping("/ai")
 public class AiController {
+  private final TravelApp travelApp;
+  private final ToolCallback[] tools;
+  private final ChatModel model;
+  private final ToolCallbackProvider mcp;
+  private final ExecutorService executor;
+  private final com.sz.aiagent.service.RunRegistry runs;
 
-    /**
-     * 注入旅行应用核心服务
-     */
-    @Resource
-    private TravelApp travelApp;
+  public AiController(
+      TravelApp travelApp,
+      ToolCallback[] allTools,
+      ChatModel dashscopeChatModel,
+      ObjectProvider<ToolCallbackProvider> mcp,
+      ExecutorService agentExecutor,
+      com.sz.aiagent.service.RunRegistry runs) {
+    this.travelApp = travelApp;
+    this.tools = allTools;
+    this.model = dashscopeChatModel;
+    this.mcp = mcp.getIfAvailable();
+    this.executor = agentExecutor;
+    this.runs = runs;
+  }
 
-    /**
-     * 注入所有工具回调，供 Manus 智能体调用
-     */
-    @Resource
-    private ToolCallback[] allTools;
+  private void validate(String message) {
+    if (message == null || message.isBlank() || message.length() > 8000)
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "消息长度应为 1–8000 字符");
+  }
 
-    /**
-     * MCP工具
-     */
-    @Resource
-    private ToolCallbackProvider toolCallbackProvider;
+  private String conversationKey(String chatId, HttpSession session) {
+    if (chatId == null || !chatId.matches("[A-Za-z0-9-]{1,80}"))
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "无效会话 ID");
+    return session.getId() + ":" + chatId;
+  }
 
-    /**
-     * 注入 DashScope ChatModel，用于与 AI 交互
-     */
-    @Resource
-    private ChatModel dashscopeChatModel;
+  @GetMapping("/chat/sync")
+  public String chat(
+      @RequestParam String message, @RequestParam String chatId, HttpSession session) {
+    validate(message);
+    return travelApp.doChat(message, conversationKey(chatId, session));
+  }
 
-    /**
-     * 同步调用 AI 应用
-     * 接收用户消息，返回 AI 回复的完整文本
-     * @param message 用户输入消息
-     * @param chatId  会话 ID，用于维护上下文
-     * @return AI 回复的文本结果
-     * @author zyh
-     * @date 2025/07/13
-     */
-    @GetMapping("/chat/sync")
-    public String doChatWithLoveAppSync(String message, String chatId) {
-        return travelApp.doChat(message, chatId);
+  @GetMapping(
+      value = {"/chat/sse", "/chat/server_sent_event"},
+      produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public Flux<ServerSentEvent<Map<String, String>>> stream(
+      @RequestParam String message, @RequestParam String chatId, HttpSession session) {
+    validate(message);
+    return travelApp
+        .doChatByStream(message, conversationKey(chatId, session))
+        .timeout(Duration.ofSeconds(120))
+        .map(chunk -> ServerSentEvent.builder(Map.of("content", chunk)).event("delta").build())
+        .concatWithValues(
+            ServerSentEvent.builder(Map.of("state", "FINISHED")).event("done").build())
+        .onErrorResume(
+            error ->
+                Flux.just(
+                    ServerSentEvent.builder(Map.of("content", "生成失败，请稍后重试。"))
+                        .event("failure")
+                        .build()));
+  }
+
+  @GetMapping(value = "/chat/sse_emitter", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public SseEmitter emitter(
+      @RequestParam String message,
+      @RequestParam String chatId,
+      @RequestParam String runId,
+      HttpSession session) {
+    Flux<ServerSentEvent<Map<String, String>>> source = stream(message, chatId, session);
+    SseEmitter emitter = new SseEmitter(180000L);
+    var subscription = Disposables.swap();
+    var registration = runs.register(session.getId(), runId);
+    registration.onCancel(
+        () -> {
+          subscription.dispose();
+          emitter.complete();
+        });
+    emitter.onCompletion(registration::complete);
+    emitter.onTimeout(registration::complete);
+    emitter.onError(error -> registration.complete());
+    emitter.onCompletion(subscription::dispose);
+    emitter.onTimeout(
+        () -> {
+          subscription.dispose();
+          emitter.complete();
+        });
+    emitter.onError(error -> subscription.dispose());
+    subscription.update(
+        source.subscribe(
+            event -> {
+              try {
+                emitter.send(SseEmitter.event().name(event.event()).data(event.data()));
+              } catch (Exception e) {
+                subscription.dispose();
+                emitter.completeWithError(e);
+              }
+            },
+            emitter::completeWithError,
+            emitter::complete));
+    return emitter;
+  }
+
+  @GetMapping(value = "/manus/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public SseEmitter agent(
+      @RequestParam String message, @RequestParam String runId, HttpSession session) {
+    validate(message);
+    var registration = runs.register(session.getId(), runId);
+    try {
+      SseEmitter emitter =
+          new Manus(tools, model, mcp).runStream(message, executor, registration::onCancel);
+      emitter.onCompletion(registration::complete);
+      emitter.onTimeout(registration::complete);
+      emitter.onError(error -> registration.complete());
+      return emitter;
+    } catch (RuntimeException e) {
+      registration.complete();
+      throw e;
     }
+  }
 
-    /**
-     * SSE 流式调用 AI 应用
-     * 返回一个 Flux 数据流，逐步推送 AI 回复的内容片段（字符串）
-     * @param message 用户输入消息
-     * @param chatId  会话 ID
-     * @return Flux 流，逐步返回 AI 回复文本片段
-     * @author zyh
-     * @date 2025/07/13
-     */
-    @GetMapping(value = "/chat/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> doChatWithLoveAppSSE(String message, String chatId) {
-        return travelApp.doChatByStream(message, chatId);
-    }
-
-    /**
-     * SSE 流式调用，包装 Flux 为 ServerSentEvent 格式
-     * 便于客户端以 SSE 协议接收分片数据
-     * @param message 用户输入消息
-     * @param chatId  会话 ID
-     * @return Flux<ServerSentEvent>，推送 AI 回复事件流
-     * @author zyh
-     * @date 2025/07/13
-     */
-    @GetMapping(value = "/chat/server_sent_event")
-    public Flux<ServerSentEvent<String>> doChatWithLoveAppServerSentEvent(String message, String chatId) {
-        return travelApp.doChatByStream(message, chatId)
-                .map(chunk -> ServerSentEvent.<String>builder()
-                        .data(chunk)
-                        .build());
-    }
-
-    /**
-     * 使用 Spring MVC 的 SseEmitter 实现 SSE 推送
-     * 手动订阅 Flux 并推送数据给客户端
-     * @param message 用户输入消息
-     * @param chatId  会话 ID
-     * @return SseEmitter，支持长连接推送数据
-     * @author zyh
-     * @date 2025/07/13
-     */
-    @GetMapping(value = "/chat/sse_emitter")
-    public SseEmitter doChatWithLoveAppServerSseEmitter(String message, String chatId) {
-        // 创建超时为 3 分钟的 SseEmitter 实例
-        SseEmitter sseEmitter = new SseEmitter(180000L);
-        // 订阅 AI 流式回复，将每个片段发送到客户端
-        travelApp.doChatByStream(message, chatId)
-                .subscribe(chunk -> {
-                            try {
-                                sseEmitter.send(chunk);
-                            } catch (IOException e) {
-                                sseEmitter.completeWithError(e);
-                            }
-                        },
-                        sseEmitter::completeWithError,
-                        sseEmitter::complete);
-        return sseEmitter;
-    }
-
-    /**
-     * 流式调用 Manus 超级智能体
-     * 使用所有注册的工具和 ChatModel，开启智能体对话流
-     * @param message 用户输入消息
-     * @return SseEmitter，推送 Manus 智能体的回复流
-     * @author zyh
-     * @date 2025/07/13
-     */
-    @GetMapping("/manus/chat")
-    public SseEmitter doChatWithManus(String message) {
-        // 新建 Manus 智能体实例（无状态）
-        Manus Manus = new Manus(allTools, dashscopeChatModel, toolCallbackProvider);
-        // 运行并返回流式响应的 SseEmitter
-        return Manus.runStream(message);
-    }
+  @DeleteMapping("/runs/{runId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void cancel(@PathVariable String runId, HttpSession session) {
+    runs.cancel(session.getId(), runId);
+  }
 }

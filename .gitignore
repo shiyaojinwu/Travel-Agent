@@ -31,3 +31,16 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local credentials, generated files and dependencies
+.env
+.env.*
+!.env.example
+**/application-local.yml
+config/*.local.json
+node_modules/
+**/dist/
+logs/
+tmp/
+*.log
+.DS_Store
