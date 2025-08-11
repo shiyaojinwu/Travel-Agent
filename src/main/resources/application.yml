@@ -1,7 +1,14 @@
 spring:
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    table: ta_schema_history
   application:
     name: travel-agent
   ai:
+    retry:
+      max-attempts: 1
     dashscope:
       api-key: ${DASHSCOPE_API_KEY:}
       chat:
@@ -38,6 +45,14 @@ knife4j:
 search-api:
   api-key: ${SEARCH_API_KEY:}
 travel:
+  legacy-api-enabled: false
+  runtime:
+    context-tokens: ${CONTEXT_TOKENS:16000}
+    output-tokens: ${OUTPUT_TOKENS:1600}
+    run-tokens: ${RUN_TOKEN_BUDGET:50000}
+    timeout-seconds: ${RUN_TIMEOUT_SECONDS:180}
+    requests-per-hour: ${REQUESTS_PER_HOUR:40}
+    mcp-allowed-tools: ${MCP_ALLOWED_TOOLS:}
   cors-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   rag:
     version: ${KNOWLEDGE_VERSION:v1}

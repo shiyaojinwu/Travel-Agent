@@ -1,57 +1,12 @@
-# AI 旅游前端项目
+# 逸游旅行工作台
 
-这是一个基于 Vue 3 和 Vite 构建的前端项目，包含 AI 旅游大师和 AI 超级智能体两个核心应用，支持与后端进行 SSE 流式对话。
+Vue 3 + Vite。统一入口提供历史会话、旅行信息编辑、知识库咨询和 Agent 规划。
 
-## 项目功能
-- **AI 旅游大师**：提供旅游相关的智能问答服务。
-- **AI 超级智能体**：提供通用的智能问答服务。
-- **SSE 流式对话**：支持与后端进行实时流式对话。
-
-## 项目结构
-```plaintext
-AI-agent-frontend/
-├── .gitignore
-├── README.md
-├── index.html
-├── package-lock.json
-├── package.json
-├── public/
-│   └── vite.svg
-├── src/
-│   ├── App.vue
-│   ├── assets/
-│   │   └── vue.svg
-│   ├── components/
-│   │   └── HelloWorld.vue
-│   ├── main.js
-│   ├── router/
-│   │   └── index.js
-│   ├── style.css
-│   └── views/
-│       ├── AISuperAgent.vue
-│       ├── AITravelMaster.vue
-│       └── Home.vue
-└── vite.config.js
-```
-
-## 技术栈
-- **框架**：Vue 3
-- **路由**：Vue Router 4
-- **构建工具**：Vite
-- **HTTP 请求**：SSE（Server-Sent Events）
-
-## 运行步骤
-1. 安装依赖
 ```bash
-npm install
-```
-2. 启动开发服务器
-```bash
+npm ci
 npm run dev
 ```
-3. 打开浏览器访问 `http://localhost:5173/`
 
-## 文档参考
-- [Vue 3 文档](https://v3.vuejs.org/)
-- [Vue Router 4 文档](https://router.vuejs.org/)
-- [Vite 文档](https://vitejs.dev/)
+默认 `/api` 代理到 `http://127.0.0.1:9527`；可用 `API_PROXY_TARGET` 调整。更换前端端口时同步调整后端 `CORS_ORIGINS`。所有写操作通过 `/api/v1`，SSE 仅订阅已有任务，断线恢复不会创建新模型请求。
+
+`npm test` 验证流式连接去重、取消、恢复、终态和请求约定；`npm run build` 生成 `dist`。部署时还需要后端与同源 `/api` 反向代理。运行说明、存储边界和配置参见根目录 README。

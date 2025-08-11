@@ -21,6 +21,10 @@ import reactor.core.publisher.Flux;
 @SpringBootTest(
     properties = {
       "spring.ai.dashscope.api-key=test-only-no-network",
+      "travel.legacy-api-enabled=true",
+      "spring.datasource.url=jdbc:h2:mem:legacy;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+      "spring.datasource.username=sa",
+      "spring.datasource.password=",
       "spring.ai.mcp.client.enabled=false",
       "travel.rag.import-on-startup=false"
     })

@@ -19,6 +19,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.Disposables;
 import reactor.core.publisher.Flux;
 
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+    name = "travel.legacy-api-enabled",
+    havingValue = "true")
 @RestController
 @RequestMapping("/ai")
 public class AiController {
